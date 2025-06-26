@@ -249,9 +249,13 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		var assDirectPlay = booleanPreference("libass_enabled", false)
 
 		/**
-  		 * Enable PGS subtitle direct-play.
+		 * Enable PGS subtitle direct-play.
 		 */
 		var pgsDirectPlay = booleanPreference("pgs_enabled", true)
+
+		var danmakuEnabled = booleanPreference("danmaku_enabled", true)
+
+		var danmakuFontScale = floatPreference("danmaku_font_scale", 1f)
 	}
 
 	init {

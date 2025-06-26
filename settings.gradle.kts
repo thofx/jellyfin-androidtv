@@ -25,6 +25,8 @@ dependencyResolutionManagement {
 		mavenCentral()
 		google()
 
+		maven("https://artifact.bytedance.com/repository/releases/")
+
 		// Jellyfin SDK
 		mavenLocal {
 			content {

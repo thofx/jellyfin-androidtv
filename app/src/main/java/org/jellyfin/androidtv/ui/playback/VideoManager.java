@@ -44,10 +44,15 @@ import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerView;
 
+import com.bytedance.danmaku.render.engine.DanmakuView;
+import com.bytedance.danmaku.render.engine.data.DanmakuData;
+import com.bytedance.danmaku.render.engine.utils.ConstantsKt;
+
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.data.compat.StreamInfo;
 import org.jellyfin.androidtv.preference.UserPreferences;
 import org.jellyfin.androidtv.preference.constant.ZoomMode;
+import org.jellyfin.androidtv.util.DanmakuXmlParser;
 import org.jellyfin.sdk.api.client.ApiClient;
 import org.jellyfin.sdk.model.api.MediaStream;
 import org.jellyfin.sdk.model.api.MediaStreamType;
@@ -77,6 +82,8 @@ public class VideoManager {
     public ExoPlayer mExoPlayer;
     private PlayerView mExoPlayerView;
     private Handler mHandler = new Handler();
+
+    private DanmakuView mDanmakuView;
 
     private long mMetaDuration = -1;
     private long lastExoPlayerPosition = -1;
@@ -115,6 +122,9 @@ public class VideoManager {
             });
         }
 
+        mDanmakuView = view.findViewById(R.id.danmakuView);
+        mDanmakuView.setVisibility(View.GONE);
+
         mExoPlayerView = view.findViewById(R.id.exoPlayerView);
         mExoPlayerView.setPlayer(mExoPlayer);
         int strokeColor = userPreferences.get(UserPreferences.Companion.getSubtitleTextStrokeColor()).intValue();
@@ -143,9 +153,14 @@ public class VideoManager {
                     if (mPlaybackControllerNotifiable != null) mPlaybackControllerNotifiable.onPrepared();
                     startProgressLoop();
                     _helper.setScreensaverLock(true);
+
+                    mDanmakuView.getController().start(mExoPlayer.getCurrentPosition());
+
                 } else {
                     stopProgressLoop();
                     _helper.setScreensaverLock(false);
+
+                    mDanmakuView.getController().pause();
                 }
             }
 
@@ -153,11 +168,15 @@ public class VideoManager {
             public void onPlaybackStateChanged(int playbackState) {
                 if (playbackState == Player.STATE_BUFFERING) {
                     Timber.d("Player is buffering");
+
+                    mDanmakuView.getController().pause();
                 }
 
                 if (playbackState == Player.STATE_ENDED) {
                     if (mPlaybackControllerNotifiable != null) mPlaybackControllerNotifiable.onCompletion();
                     stopProgressLoop();
+
+                    mDanmakuView.getController().stop();
                 }
             }
 
@@ -174,6 +193,8 @@ public class VideoManager {
                 if (reason == Player.DISCONTINUITY_REASON_INTERNAL) {
                     Timber.d("Caught player discontinuity (reason internal) - oldPos: %s newPos: %s", oldPosition.positionMs, newPosition.positionMs);
                 }
+                mDanmakuView.getController().clear(ConstantsKt.LAYER_TYPE_SCROLL);
+                mDanmakuView.getController().start(newPosition.positionMs);
             }
 
             @Override
@@ -327,7 +348,6 @@ public class VideoManager {
                     .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
                     .build());
         }
-
         stopProgressLoop();
     }
 
@@ -391,6 +411,17 @@ public class VideoManager {
 
             mExoPlayer.setMediaItem(mediaItem);
             mExoPlayer.prepare();
+
+            if (userPreferences.get(UserPreferences.Companion.getDanmakuEnabled())) {
+                List<DanmakuData> data = DanmakuXmlParser.parse(userPreferences, streamInfo.getDanmaku());
+                if (data != null) {
+                    mDanmakuView.setVisibility(View.VISIBLE);
+                    mDanmakuView.getController().setData(data, 0L);
+                } else {
+                    mDanmakuView.getController().setData(new ArrayList<>(), 0);
+                    mDanmakuView.setVisibility(View.GONE);
+                }
+            }
         } catch (IllegalStateException e) {
             Timber.e(e, "Unable to set video path.  Probably backing out.");
         }

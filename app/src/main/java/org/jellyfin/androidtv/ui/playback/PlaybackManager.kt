@@ -10,12 +10,14 @@ import org.jellyfin.androidtv.data.compat.StreamInfo
 import org.jellyfin.androidtv.data.compat.VideoOptions
 import org.jellyfin.androidtv.util.apiclient.Response
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.HttpMethod
 import org.jellyfin.sdk.api.client.extensions.hlsSegmentApi
 import org.jellyfin.sdk.api.client.extensions.mediaInfoApi
 import org.jellyfin.sdk.api.client.extensions.videosApi
 import org.jellyfin.sdk.model.api.PlayMethod
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackInfoResponse
+import timber.log.Timber
 
 private fun createStreamInfo(
 	api: ApiClient,
@@ -91,7 +93,7 @@ class PlaybackManager(
 		options: VideoOptions,
 		startTimeTicks: Long
 	) = runCatching {
-		val response =withContext(Dispatchers.IO) {
+		val response = withContext(Dispatchers.IO) {
 			api.mediaInfoApi.getPostedPlaybackInfo(
 				itemId = requireNotNull(options.itemId) { "Item id cannot be null" },
 				data = PlaybackInfoDto(
@@ -116,6 +118,18 @@ class PlaybackManager(
 			}
 		}
 
-		createStreamInfo(api, options, response)
+		var streamInfo = createStreamInfo(api, options, response)
+
+		// get danmaku
+		try {
+			var res = withContext(Dispatchers.IO) { api.request(HttpMethod.GET, "/api/danmu/${options.itemId}/raw") }
+			if (res.status == 200) {
+				streamInfo.danmaku = res.body.readRemaining().readText()
+			}
+		} catch (e: Exception) {
+			Timber.e(e.message, "Failed to get danmaku")
+		}
+
+		streamInfo
 	}
 }

@@ -40,6 +40,8 @@ markwon = "4.6.2"
 mockk = "1.14.4"
 slf4j-timber = "0.0.4"
 timber = "5.0.1"
+danmaku-render-engine="0.1.0"
+
 
 [plugins]
 aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
@@ -122,6 +124,9 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 # Compatibility (desugaring)
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
+
+# danmu
+danmaku-render-engine = { module = "com.github.bytedance:danmaku-render-engine", version.ref = "danmaku-render-engine"}
 
 # Test utilities
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }

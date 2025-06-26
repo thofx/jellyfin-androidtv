@@ -105,4 +105,14 @@ public class StreamInfo {
 
         return list;
     }
+
+    private String danmaku;
+
+    public String getDanmaku() {
+        return danmaku;
+    }
+
+    public void setDanmaku(String danmaku) {
+        this.danmaku = danmaku;
+    }
 }

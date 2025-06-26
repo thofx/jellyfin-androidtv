@@ -88,6 +88,28 @@ class PlaybackPreferencesScreen : OptionsFragment() {
 				}
 				bind(userSettingPreferences, UserSettingPreferences.skipForwardLength)
 			}
+
+			checkbox {
+				setTitle(R.string.pref_enable_danmaku)
+				bind(userPreferences, UserPreferences.danmakuEnabled)
+			}
+
+			@Suppress("MagicNumber")
+			seekbar {
+				setTitle(R.string.pref_danmaku_font_scale)
+				min = 25 // 0.25f
+				max = 250 // 2.5f
+				increment = 25 // 0.25f
+				valueFormatter = object : DurationSeekBarPreference.ValueFormatter() {
+					override fun display(value: Int): String = "$value%"
+				}
+
+				bind {
+					get { (userPreferences[UserPreferences.danmakuFontScale] * 100f).roundToInt() }
+					set { value -> userPreferences[UserPreferences.danmakuFontScale] = value / 100f }
+					default { (UserPreferences.danmakuFontScale.defaultValue * 100f).roundToInt() }
+				}
+			}
 		}
 
 		category {

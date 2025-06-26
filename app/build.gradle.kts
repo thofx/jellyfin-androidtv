@@ -156,6 +156,9 @@ dependencies {
 	// Compatibility (desugaring)
 	coreLibraryDesugaring(libs.android.desugar)
 
+	// danmu
+	implementation(libs.danmaku.render.engine)
+
 	// Testing
 	testImplementation(libs.kotest.runner.junit5)
 	testImplementation(libs.kotest.assertions)
